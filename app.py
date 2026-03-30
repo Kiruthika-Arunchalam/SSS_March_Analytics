@@ -219,7 +219,7 @@ st.plotly_chart(fig, use_container_width=True)
 # ---------------------------
 # OPERATOR COMPARISON
 # ---------------------------
-st.markdown('<div class="section">⚔️ Operator Comparison</div>', unsafe_allow_html=True)
+st.markdown('<div class="section"> Operator Comparison</div>', unsafe_allow_html=True)
 
 compare = (
     filtered_df["Operator_Code"]
