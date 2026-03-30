@@ -102,13 +102,17 @@ def load_data():
     import zipfile
 
     with zipfile.ZipFile("SSS_SCHEDULE_DATA.zip") as z:
-        file_name = z.namelist()[0]  # get first file inside zip
+        file_name = z.namelist()[0]
         with z.open(file_name) as f:
             df = pd.read_csv(f, encoding="cp1252")
 
     return df
-   df = load_data()
-   if df is None or df.empty:
+
+
+# ✅ CALL FUNCTION OUTSIDE (NO INDENT)
+df = load_data()
+
+if df is None or df.empty:
     st.error("Data not loaded!")
     st.stop()
 
