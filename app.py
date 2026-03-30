@@ -97,14 +97,12 @@ st.markdown('<div class="title">SSS DATA ANALYTICS DASHBOARD</div>', unsafe_allo
 # ---------------------------
 # LOAD DATA (FIXED)
 # ---------------------------
-@st.cache_data
-def load_data():
-    return pd.read_csv(
-        r"C:\Users\sm2069\Desktop\SSS_March\SSS_SCHEDULE_DATA_2026_03_27.csv",
-        encoding="cp1252"  # ✅ FIXED Unicode error
-    )
-
-df = load_data()
+pd.read_csv(
+    "SSS_SCHEDULE_DATA.zip",
+    compression="zip",
+    encoding="cp1252",
+    low_memory=False
+)
 
 # ---------------------------
 # DATE CLEANING (FIXED)
