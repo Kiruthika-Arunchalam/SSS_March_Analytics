@@ -97,17 +97,27 @@ st.markdown('<div class="title">SSS DATA ANALYTICS DASHBOARD</div>', unsafe_allo
 # ---------------------------
 # LOAD DATA (FIXED)
 # ---------------------------
-pd.read_csv(
-    "SSS_SCHEDULE_DATA.zip",
-    compression="zip",
-    encoding="cp1252",
-    low_memory=False
-)
+@st.cache_data
+def load_data():
+    import zipfile
+
+    with zipfile.ZipFile("SSS_SCHEDULE_DATA.zip") as z:
+        file_name = z.namelist()[0]  # get first file inside zip
+        with z.open(file_name) as f:
+            df = pd.read_csv(f, encoding="cp1252")
+
+    return df
+   df = load_data()
+
+if df is None or df.empty:
+    st.error("Data not loaded!")
+    st.stop()
+
+df["Inserted_At"] = pd.to_datetime(df["Inserted_At"], errors="coerce")
 
 # ---------------------------
 # DATE CLEANING (FIXED)
 # ---------------------------
-df["Inserted_At"] = pd.to_datetime(df["Inserted_At"], errors="coerce")
 
 # Remove invalid dates
 df = df.dropna(subset=["Inserted_At"])
