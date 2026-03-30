@@ -112,6 +112,10 @@ def load_data():
 # ✅ CALL FUNCTION OUTSIDE (NO INDENT)
 df = load_data()
 
+
+df["From_Port"] = df["From_Port"].str.upper()
+df["To_Port"] = df["To_Port"].str.upper()
+
 if df is None or df.empty:
     st.error("Data not loaded!")
     st.stop()
