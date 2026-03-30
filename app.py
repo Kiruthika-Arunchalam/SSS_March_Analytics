@@ -108,8 +108,7 @@ def load_data():
 
     return df
    df = load_data()
-
-if df is None or df.empty:
+   if df is None or df.empty:
     st.error("Data not loaded!")
     st.stop()
 
