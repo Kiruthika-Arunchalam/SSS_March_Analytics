@@ -208,7 +208,15 @@ fig = px.bar(
     x="Count",
     color="Operator_Code",
     barmode="stack",
-    orientation="h"
+    orientation="h",
+    text="Operator_Code"   # 👈 ADD THIS
+)
+
+# OPTIONAL: Improve readability
+fig.update_traces(
+    textfont=dict(size=9),
+    text=trend["Operator_Code"],
+    textposition="auto"
 )
 
 fig.update_layout(
