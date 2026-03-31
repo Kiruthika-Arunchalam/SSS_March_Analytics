@@ -214,7 +214,7 @@ fig = px.bar(
 
 # ✅ FIXED LABEL DISPLAY
 fig.update_traces(
-    textposition="inside",   # auto inside/outside
+    textposition="outside",   # auto inside/outside
     textfont=dict(size=9)
 )
 
