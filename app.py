@@ -209,14 +209,16 @@ fig = px.bar(
     color="Operator_Code",
     barmode="stack",
     orientation="h",
-    text="Operator_Code"   # ✅ this is enough
+    text="Operator_Code"   # ✅ Correct mapping
 )
 
+# ✅ FIXED LABEL DISPLAY
 fig.update_traces(
-    textposition="auto",   # auto handles inside/outside
+    textposition="auto",   # auto inside/outside
     textfont=dict(size=9)
-))
+)
 
+# ✅ FIXED SYNTAX (NO EXTRA BRACKET)
 fig.update_layout(
     yaxis=dict(
         tickformat="%d-%m-%Y"
