@@ -209,15 +209,13 @@ fig = px.bar(
     color="Operator_Code",
     barmode="stack",
     orientation="h",
-    text="Operator_Code"   # 👈 ADD THIS
+    text="Operator_Code"   # ✅ this is enough
 )
 
-# OPTIONAL: Improve readability
 fig.update_traces(
-    textfont=dict(size=9),
-    text=trend["Operator_Code"],
-    textposition="auto"
-)
+    textposition="auto",   # auto handles inside/outside
+    textfont=dict(size=9)
+))
 
 fig.update_layout(
     yaxis=dict(
