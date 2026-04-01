@@ -176,6 +176,23 @@ c2.markdown(f'<div class="card card2">PORTS<br><h1>{filtered_df["From_Port"].nun
 c3.markdown(f'<div class="card card3">TERMINALS<br><h1>{filtered_df["From_Port_Terminal"].nunique()}</h1></div>', unsafe_allow_html=True)
 c4.markdown(f'<div class="card card4">VESSELS<br><h1>{filtered_df["Vessel_Name"].nunique()}</h1></div>', unsafe_allow_html=True)
 
+import pandas as pd
+
+# Ensure date format is correct
+df['Inserted_Date'] = pd.to_datetime(df['Inserted_Date']).dt.date
+
+# Group and count
+summary_df = (
+    df.groupby(['Inserted_Date', 'Operator_Code'])
+      .size()
+      .reset_index(name='Operator_Count')
+)
+
+# Sort for better readability
+summary_df = summary_df.sort_values(by=['Inserted_Date', 'Operator_Code'])
+
+print(summary_df)
+
 # ---------------------------
 # OPERATOR TREND
 # ---------------------------
