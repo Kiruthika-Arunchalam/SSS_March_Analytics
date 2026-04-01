@@ -127,7 +127,7 @@ from_port = col3.multiselect("From Port", from_port_list)
 to_port = col4.multiselect("To Port", to_port_list)
 
 # ---------------------------
-# DATE SLIDER (NEW UX)
+# DATE SLIDER (CUSTOM DEFAULT)
 # ---------------------------
 valid_dates = df["Inserted_Date"].dropna()
 
@@ -135,11 +135,19 @@ if not valid_dates.empty:
     min_date = valid_dates.min().to_pydatetime()
     max_date = valid_dates.max().to_pydatetime()
 
+    # ✅ CUSTOM DEFAULT RANGE
+    default_start = pd.to_datetime("2026-03-02")
+    default_end = pd.to_datetime("2026-03-31")
+
+    # Ensure within bounds
+    default_start = max(default_start, pd.to_datetime(min_date))
+    default_end = min(default_end, pd.to_datetime(max_date))
+
     date_range = st.slider(
         "📅 Select Date Range",
         min_value=min_date,
         max_value=max_date,
-        value=(min_date, max_date)
+        value=(default_start.to_pydatetime(), default_end.to_pydatetime())
     )
 else:
     date_range = None
