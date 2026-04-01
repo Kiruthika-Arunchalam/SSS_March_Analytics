@@ -101,7 +101,7 @@ st.markdown('<div class="title">SSS DATA ANALYTICS DASHBOARD</div>', unsafe_allo
 def load_data():
     import zipfile
 
-    with zipfile.ZipFile("SSS_SCHEDULE_DATA.zip") as z:
+    with zipfile.ZipFile("SSS_Mar_26.zip") as z:
         file_name = z.namelist()[0]
         with z.open(file_name) as f:
             df = pd.read_csv(f, encoding="cp1252")
