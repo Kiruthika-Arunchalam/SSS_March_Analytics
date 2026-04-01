@@ -185,7 +185,12 @@ df['Inserted_Date'] = pd.to_datetime(df['Inserted_Date']).dt.date
 # ---------------------------
 # SUMMARY TABLE (FIXED)
 # ---------------------------
-st.markdown('<div class="section">Date vs Operator Summary</div>', unsafe_allow_html=True)
+st.markdown('<div class="section">Operator Extraction Summary</div>', unsafe_allow_html=True)
+
+# ---------------------------
+# SUMMARY TABLE (FORMAT FIX)
+# ---------------------------
+st.markdown('<div class="section">Operator Extraction Summary</div>', unsafe_allow_html=True)
 
 summary_df = (
     filtered_df
@@ -196,7 +201,10 @@ summary_df = (
     .sort_values(by=["Inserted_Date", "Operator_Code"])
 )
 
-# Show in Streamlit
+# ✅ FORMAT DATE (IMPORTANT LINE)
+summary_df["Inserted_Date"] = summary_df["Inserted_Date"].dt.strftime("%d-%m-%Y")
+
+# Show in UI
 st.dataframe(summary_df, use_container_width=True)
 # ---------------------------
 # OPERATOR TREND
