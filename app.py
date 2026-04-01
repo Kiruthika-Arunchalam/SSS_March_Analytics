@@ -26,7 +26,6 @@ body {{
     background-color: {bg_color};
     color: {text_color};
 }}
-
 .title {{
     background: linear-gradient(90deg, #ff9a9e, #a18cd1, #84fab0);
     padding: 18px;
@@ -37,7 +36,6 @@ body {{
     border-radius: 12px;
     margin-bottom: 20px;
 }}
-
 .section {{
     background: linear-gradient(90deg, #36d1dc, #5b86e5);
     padding: 10px;
@@ -46,7 +44,6 @@ body {{
     border-radius: 8px;
     margin-top: 25px;
 }}
-
 .card {{
     padding: 25px;
     border-radius: 14px;
@@ -54,7 +51,6 @@ body {{
     text-align: center;
     font-weight: bold;
 }}
-
 .card1 {{ background: linear-gradient(135deg, #ff9a9e, #fad0c4); }}
 .card2 {{ background: linear-gradient(135deg, #a18cd1, #fbc2eb); }}
 .card3 {{ background: linear-gradient(135deg, #f6d365, #fda085); }}
@@ -105,14 +101,13 @@ df["Service"] = df["Service"].astype(str).str.strip()
 df["From_Port"] = df["From_Port"].astype(str).str.strip().str.upper()
 df["To_Port"] = df["To_Port"].astype(str).str.strip().str.upper()
 
-# ✅ FIXED DATE HANDLING
 df["Inserted_At"] = pd.to_datetime(df["Inserted_At"], errors="coerce", dayfirst=True)
 df["Inserted_Date"] = df["Inserted_At"].dt.normalize()
 
 # ---------------------------
 # FILTER UI
 # ---------------------------
-st.markdown("### 🔍 Filters")
+st.markdown("### Filters")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -127,7 +122,7 @@ from_port = col3.multiselect("From Port", from_port_list)
 to_port = col4.multiselect("To Port", to_port_list)
 
 # ---------------------------
-# DATE SLIDER (CUSTOM DEFAULT)
+# DATE SLIDER (FIXED)
 # ---------------------------
 valid_dates = df["Inserted_Date"].dropna()
 
@@ -135,25 +130,11 @@ if not valid_dates.empty:
     min_date = valid_dates.min().to_pydatetime()
     max_date = valid_dates.max().to_pydatetime()
 
-    # ✅ CUSTOM DEFAULT RANGE
-    default_start = pd.to_datetime("2026-03-02")
-    default_end = pd.to_datetime("2026-03-31")
-
-  date_range = st.slider(
-    "📅 Select Date Range",
-    min_value=pd.to_datetime("2026-03-01").to_pydatetime(),
-    max_value=pd.to_datetime("2026-03-31").to_pydatetime(),
-    value=(
-        pd.to_datetime("2026-03-02").to_pydatetime(),
-        pd.to_datetime("2026-03-31").to_pydatetime()
-    )
-)
-
     date_range = st.slider(
         "📅 Select Date Range",
         min_value=min_date,
         max_value=max_date,
-        value=(default_start.to_pydatetime(), default_end.to_pydatetime())
+        value=(min_date, max_date)
     )
 else:
     date_range = None
@@ -176,16 +157,13 @@ filtered_df = df[
     (df["To_Port"].isin(to_port))
 ]
 
-# ✅ DATE FILTER (FINAL FIX)
+# DATE FILTER
 if date_range:
     start_date, end_date = date_range
 
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
-
     filtered_df = filtered_df[
-        (filtered_df["Inserted_Date"] >= start_date) &
-        (filtered_df["Inserted_Date"] <= end_date)
+        (filtered_df["Inserted_Date"] >= pd.to_datetime(start_date)) &
+        (filtered_df["Inserted_Date"] <= pd.to_datetime(end_date))
     ]
 
 # ---------------------------
