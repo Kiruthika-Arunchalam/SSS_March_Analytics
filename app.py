@@ -105,8 +105,9 @@ df["Service"] = df["Service"].astype(str).str.strip()
 df["From_Port"] = df["From_Port"].astype(str).str.strip().str.upper()
 df["To_Port"] = df["To_Port"].astype(str).str.strip().str.upper()
 
-df["Inserted_At"] = pd.to_datetime(df["Inserted_At"], errors="coerce")
-df["Inserted_Date"] = df["Inserted_At"].dt.date
+# ✅ FIXED DATE HANDLING
+df["Inserted_At"] = pd.to_datetime(df["Inserted_At"], errors="coerce", dayfirst=True)
+df["Inserted_Date"] = df["Inserted_At"].dt.normalize()
 
 # ---------------------------
 # FILTER UI
@@ -126,17 +127,25 @@ from_port = col3.multiselect("From Port", from_port_list)
 to_port = col4.multiselect("To Port", to_port_list)
 
 # ---------------------------
-# DATE FILTER (FIXED)
+# DATE SLIDER (NEW UX)
 # ---------------------------
 valid_dates = df["Inserted_Date"].dropna()
 
-date_range = st.date_input(
-    "📅 Select Date Range (Optional)",
-    value=None   # ✅ No default → no forced filtering
-)
+if not valid_dates.empty:
+    min_date = valid_dates.min().to_pydatetime()
+    max_date = valid_dates.max().to_pydatetime()
+
+    date_range = st.slider(
+        "📅 Select Date Range",
+        min_value=min_date,
+        max_value=max_date,
+        value=(min_date, max_date)
+    )
+else:
+    date_range = None
 
 # ---------------------------
-# DEFAULT BEHAVIOR
+# DEFAULT FILTERS
 # ---------------------------
 if not operator: operator = operator_list
 if not service: service = service_list
@@ -153,18 +162,20 @@ filtered_df = df[
     (df["To_Port"].isin(to_port))
 ]
 
-# ✅ APPLY DATE FILTER ONLY IF SELECTED
-if isinstance(date_range, tuple) and len(date_range) == 2:
+# ✅ DATE FILTER (FINAL FIX)
+if date_range:
     start_date, end_date = date_range
 
-    if start_date and end_date:
-        filtered_df = filtered_df[
-            (filtered_df["Inserted_Date"] >= start_date) &
-            (filtered_df["Inserted_Date"] <= end_date)
-        ]
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    filtered_df = filtered_df[
+        (filtered_df["Inserted_Date"] >= start_date) &
+        (filtered_df["Inserted_Date"] <= end_date)
+    ]
 
 # ---------------------------
-# KPI CARDS (CORRECT)
+# KPI CARDS
 # ---------------------------
 c1, c2, c3, c4 = st.columns(4)
 
