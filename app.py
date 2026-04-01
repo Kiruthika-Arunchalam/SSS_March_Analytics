@@ -182,17 +182,22 @@ import pandas as pd
 df['Inserted_Date'] = pd.to_datetime(df['Inserted_Date']).dt.date
 
 # Group and count
+# ---------------------------
+# SUMMARY TABLE (FIXED)
+# ---------------------------
+st.markdown('<div class="section">Date vs Operator Summary</div>', unsafe_allow_html=True)
+
 summary_df = (
-    df.groupby(['Inserted_Date', 'Operator_Code'])
-      .size()
-      .reset_index(name='Operator_Count')
+    filtered_df
+    .dropna(subset=["Inserted_Date", "Operator_Code"])
+    .groupby(["Inserted_Date", "Operator_Code"])
+    .size()
+    .reset_index(name="Operator_Count")
+    .sort_values(by=["Inserted_Date", "Operator_Code"])
 )
 
-# Sort for better readability
-summary_df = summary_df.sort_values(by=['Inserted_Date', 'Operator_Code'])
-
-print(summary_df)
-
+# Show in Streamlit
+st.dataframe(summary_df, use_container_width=True)
 # ---------------------------
 # OPERATOR TREND
 # ---------------------------
