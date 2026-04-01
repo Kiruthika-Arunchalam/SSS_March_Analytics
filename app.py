@@ -10,7 +10,7 @@ import os
 st.set_page_config(page_title="SSS Dashboard", layout="wide")
 
 # ---------------------------
-# THEME TOGGLE
+# THEME
 # ---------------------------
 theme = st.toggle("🌙 Dark Mode")
 
@@ -67,7 +67,6 @@ body {{
 # ---------------------------
 def style_chart(fig):
     axis_color = "white" if theme else "black"
-
     fig.update_layout(
         plot_bgcolor=bg_color,
         paper_bgcolor=bg_color,
@@ -83,7 +82,7 @@ def style_chart(fig):
 st.markdown('<div class="title">SSS DATA ANALYTICS DASHBOARD</div>', unsafe_allow_html=True)
 
 # ---------------------------
-# LOAD DATA (FIXED)
+# LOAD DATA
 # ---------------------------
 @st.cache_data
 def load_data():
@@ -99,51 +98,53 @@ def load_data():
 df = load_data()
 
 # ---------------------------
-# CLEAN DATA (CRITICAL FIX)
+# CLEAN DATA
 # ---------------------------
 df["Operator_Code"] = df["Operator_Code"].astype(str).str.strip()
 df["Service"] = df["Service"].astype(str).str.strip()
 df["From_Port"] = df["From_Port"].astype(str).str.strip().str.upper()
 df["To_Port"] = df["To_Port"].astype(str).str.strip().str.upper()
 
-# Date conversion WITHOUT dropping data
 df["Inserted_At"] = pd.to_datetime(df["Inserted_At"], errors="coerce")
 df["Inserted_Date"] = df["Inserted_At"].dt.date
 
 # ---------------------------
-# FILTERS
+# FILTER UI
 # ---------------------------
+st.markdown("### 🔍 Filters")
+
 col1, col2, col3, col4 = st.columns(4)
 
-operator = col1.multiselect("Operator", sorted(df["Operator_Code"].dropna().unique()))
-service = col2.multiselect("Service", sorted(df["Service"].dropna().unique()))
-from_port = col3.multiselect("From Port", sorted(df["From_Port"].dropna().unique()))
-to_port = col4.multiselect("To Port", sorted(df["To_Port"].dropna().unique()))
+operator_list = sorted(df["Operator_Code"].dropna().unique())
+service_list = sorted(df["Service"].dropna().unique())
+from_port_list = sorted(df["From_Port"].dropna().unique())
+to_port_list = sorted(df["To_Port"].dropna().unique())
+
+operator = col1.multiselect("Operator", operator_list)
+service = col2.multiselect("Service", service_list)
+from_port = col3.multiselect("From Port", from_port_list)
+to_port = col4.multiselect("To Port", to_port_list)
 
 # ---------------------------
-# DATE FILTER (OPTIONAL SAFE)
+# DATE FILTER (FIXED)
 # ---------------------------
 valid_dates = df["Inserted_Date"].dropna()
 
-if not valid_dates.empty:
-    min_date = valid_dates.min()
-    max_date = valid_dates.max()
-else:
-    min_date, max_date = None, None
-
 date_range = st.date_input(
-    "Select Date Range (Optional)",
-    value=(min_date, max_date) if min_date else None
+    "📅 Select Date Range (Optional)",
+    value=None   # ✅ No default → no forced filtering
 )
 
-# Defaults (show all)
-if not operator: operator = df["Operator_Code"].unique()
-if not service: service = df["Service"].unique()
-if not from_port: from_port = df["From_Port"].unique()
-if not to_port: to_port = df["To_Port"].unique()
+# ---------------------------
+# DEFAULT BEHAVIOR
+# ---------------------------
+if not operator: operator = operator_list
+if not service: service = service_list
+if not from_port: from_port = from_port_list
+if not to_port: to_port = to_port_list
 
 # ---------------------------
-# FILTER DATA (NO DATA LOSS)
+# APPLY FILTERS
 # ---------------------------
 filtered_df = df[
     (df["Operator_Code"].isin(operator)) &
@@ -152,27 +153,25 @@ filtered_df = df[
     (df["To_Port"].isin(to_port))
 ]
 
-# Apply date filter ONLY if selected
+# ✅ APPLY DATE FILTER ONLY IF SELECTED
 if isinstance(date_range, tuple) and len(date_range) == 2:
     start_date, end_date = date_range
 
-    filtered_df = filtered_df[
-        (filtered_df["Inserted_Date"].isna()) |  # keep rows without date
-        (
+    if start_date and end_date:
+        filtered_df = filtered_df[
             (filtered_df["Inserted_Date"] >= start_date) &
             (filtered_df["Inserted_Date"] <= end_date)
-        )
-    ]
+        ]
 
 # ---------------------------
-# KPI CARDS (CORRECT NOW)
+# KPI CARDS (CORRECT)
 # ---------------------------
 c1, c2, c3, c4 = st.columns(4)
 
-c1.markdown(f'<div class="card card1">OPERATORS<br><h1>{df["Operator_Code"].nunique()}</h1></div>', unsafe_allow_html=True)
-c2.markdown(f'<div class="card card2">PORTS<br><h1>{df["From_Port"].nunique()}</h1></div>', unsafe_allow_html=True)
-c3.markdown(f'<div class="card card3">TERMINALS<br><h1>{df["From_Port_Terminal"].nunique()}</h1></div>', unsafe_allow_html=True)
-c4.markdown(f'<div class="card card4">VESSELS<br><h1>{df["Vessel_Name"].nunique()}</h1></div>', unsafe_allow_html=True)
+c1.markdown(f'<div class="card card1">OPERATORS<br><h1>{filtered_df["Operator_Code"].nunique()}</h1></div>', unsafe_allow_html=True)
+c2.markdown(f'<div class="card card2">PORTS<br><h1>{filtered_df["From_Port"].nunique()}</h1></div>', unsafe_allow_html=True)
+c3.markdown(f'<div class="card card3">TERMINALS<br><h1>{filtered_df["From_Port_Terminal"].nunique()}</h1></div>', unsafe_allow_html=True)
+c4.markdown(f'<div class="card card4">VESSELS<br><h1>{filtered_df["Vessel_Name"].nunique()}</h1></div>', unsafe_allow_html=True)
 
 # ---------------------------
 # OPERATOR TREND
