@@ -139,9 +139,15 @@ if not valid_dates.empty:
     default_start = pd.to_datetime("2026-03-02")
     default_end = pd.to_datetime("2026-03-31")
 
-    # Ensure within bounds
-    default_start = max(default_start, pd.to_datetime(min_date))
-    default_end = min(default_end, pd.to_datetime(max_date))
+  date_range = st.slider(
+    "📅 Select Date Range",
+    min_value=pd.to_datetime("2026-03-01").to_pydatetime(),
+    max_value=pd.to_datetime("2026-03-31").to_pydatetime(),
+    value=(
+        pd.to_datetime("2026-03-02").to_pydatetime(),
+        pd.to_datetime("2026-03-31").to_pydatetime()
+    )
+)
 
     date_range = st.slider(
         "📅 Select Date Range",
