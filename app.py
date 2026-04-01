@@ -181,11 +181,7 @@ import pandas as pd
 # Ensure date format is correct
 df['Inserted_Date'] = pd.to_datetime(df['Inserted_Date']).dt.date
 
-# Group and count
-# ---------------------------
-# SUMMARY TABLE (FIXED)
-# ---------------------------
-st.markdown('<div class="section">Operator Extraction Summary</div>', unsafe_allow_html=True)
+
 
 # ---------------------------
 # SUMMARY TABLE (FORMAT FIX)
