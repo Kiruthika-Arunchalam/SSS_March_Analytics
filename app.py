@@ -194,7 +194,7 @@ summary_df = (
     .dropna(subset=["Inserted_Date", "Operator_Code"])
     .groupby(["Inserted_Date", "Operator_Code"])
     .size()
-    .reset_index(name="Operator_Count")
+    
 )
 
 # Sort before formatting
@@ -210,7 +210,7 @@ total_df = (
 total_df["Operator_Code"] = "TOTAL"
 
 # Combine both
-final_df = pd.concat([summary_df, total_df], ignore_index=True)
+final_df = pd.concat([summary_df, total_df], ignore_index=False)
 
 # ✅ Format date (ONLY for display)
 final_df["Inserted_Date"] = pd.to_datetime(final_df["Inserted_Date"]).dt.strftime("%d-%m-%Y")
