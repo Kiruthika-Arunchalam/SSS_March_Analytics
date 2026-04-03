@@ -12,7 +12,7 @@ st.set_page_config(page_title="SSS Dashboard", layout="wide")
 # ---------------------------
 # THEME
 # ---------------------------
-theme = st.toggle("🌙 Dark Mode")
+theme = st.toggle("Dark Mode")
 
 bg_color = "#0e1117" if theme else "white"
 text_color = "white" if theme else "black"
@@ -59,33 +59,48 @@ body {{
 """, unsafe_allow_html=True)
 
 # ---------------------------
+# CHART STYLE
+# ---------------------------
+def style_chart(fig):
+    fig.update_layout(
+        plot_bgcolor=bg_color,
+        paper_bgcolor=bg_color,
+        font_color=text_color
+    )
+    return fig
+
+# ---------------------------
 # TITLE
 # ---------------------------
 st.markdown('<div class="title">SSS DATA ANALYTICS DASHBOARD</div>', unsafe_allow_html=True)
 
 # ---------------------------
-# FILE UPLOAD
+# FILE PATH (BACKEND)
 # ---------------------------
-uploaded_file = st.file_uploader("Upload CSV or ZIP", type=["csv", "zip"])
+FILE_PATH = "data/SSS-Mar_26.zip"
 
-if not uploaded_file:
-    st.warning("👆 Upload file to continue")
+if not os.path.exists(FILE_PATH):
+    st.error("❌ File not found")
     st.stop()
 
-st.write("📁 File:", uploaded_file.name)
+# ---------------------------
+# LOAD ZIP
+# ---------------------------
+with zipfile.ZipFile(FILE_PATH, 'r') as z:
+    file_list = z.namelist()
+
+    csv_files = [f for f in file_list if "SSS_Mar_26" in f]
+
+    if not csv_files:
+        st.error("❌ CSV not found inside ZIP")
+        st.stop()
+
+    df = pd.read_csv(z.open(csv_files[0]))
+
+st.success("✅ Backend File Loaded")
 
 # ---------------------------
-# READ FILE (NO CACHE)
-# ---------------------------
-if uploaded_file.name.endswith(".zip"):
-    with zipfile.ZipFile(uploaded_file, 'r') as z:
-        csv_files = [f for f in z.namelist() if f.endswith(".csv")]
-        df = pd.read_csv(z.open(csv_files[0]))
-else:
-    df = pd.read_csv(uploaded_file)
-
-# ---------------------------
-# CLEAN DATA (IMPORTANT)
+# CLEAN DATA
 # ---------------------------
 df.columns = df.columns.str.strip()
 
@@ -98,7 +113,7 @@ df["Inserted_At"] = pd.to_datetime(df["Inserted_At"], errors="coerce", dayfirst=
 df["Inserted_Date"] = df["Inserted_At"].dt.normalize()
 
 # ---------------------------
-# DEBUG (VERY IMPORTANT)
+# DEBUG
 # ---------------------------
 st.write("Rows:", len(df))
 st.write("Operators:", df["Operator_Code"].nunique())
@@ -115,13 +130,11 @@ service = col2.multiselect("Service", sorted(df["Service"].unique()))
 from_port = col3.multiselect("From Port", sorted(df["From_Port"].unique()))
 to_port = col4.multiselect("To Port", sorted(df["To_Port"].unique()))
 
-# Default all
 if not operator: operator = df["Operator_Code"].unique()
 if not service: service = df["Service"].unique()
 if not from_port: from_port = df["From_Port"].unique()
 if not to_port: to_port = df["To_Port"].unique()
 
-# Apply filters
 filtered_df = df[
     (df["Operator_Code"].isin(operator)) &
     (df["Service"].isin(service)) &
@@ -152,10 +165,7 @@ summary_df = (
     .reset_index(name="Operator_Count")
 )
 
-total_df = (
-    summary_df.groupby("Inserted_Date", as_index=False)["Operator_Count"].sum()
-)
-
+total_df = summary_df.groupby("Inserted_Date", as_index=False)["Operator_Count"].sum()
 total_df["Operator_Code"] = "TOTAL"
 
 final_df = pd.concat([summary_df, total_df], ignore_index=True)
@@ -182,39 +192,9 @@ trend = (
 
 fig = px.bar(trend, y="Inserted_Date", x="Count", color="Operator_Code", orientation="h", text="Operator_Code")
 fig.update_traces(textposition="outside")
+fig = style_chart(fig)
+
 st.plotly_chart(fig, use_container_width=True)
-# ---------------------------
-# OPERATOR COMPARISON
-# ---------------------------
-st.markdown('<div class="section">Operator Comparison</div>', unsafe_allow_html=True)
-
-compare = filtered_df["Operator_Code"].value_counts().reset_index()
-compare.columns = ["Operator", "Count"]
-
-fig_compare = px.bar(compare, x="Operator", y="Count", color="Operator")
-fig_compare = style_chart(fig_compare)
-
-st.plotly_chart(fig_compare, use_container_width=True)
-
-# ---------------------------
-# TOP ROUTES
-# ---------------------------
-st.markdown('<div class="section">Top Routes</div>', unsafe_allow_html=True)
-
-route_df = (
-    filtered_df.groupby(["From_Port", "To_Port"])
-    .size()
-    .reset_index(name="Count")
-)
-
-route_df["Route"] = route_df["From_Port"] + " → " + route_df["To_Port"]
-route_df = route_df.sort_values(by="Count", ascending=False).head(10)
-
-fig_route = px.bar(route_df, x="Count", y="Route", orientation="h", color="Route")
-fig_route = style_chart(fig_route)
-
-st.plotly_chart(fig_route, use_container_width=True)
-
 # ---------------------------
 # SERVICE DISTRIBUTION
 # ---------------------------
