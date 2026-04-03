@@ -194,13 +194,13 @@ summary_df = (
     .dropna(subset=["Inserted_Date", "Operator_Code"])
     .groupby(["Inserted_Date", "Operator_Code"])
     .size()
-    
+    .reset_index(name="Operator_Count")   # ✅ FIX
 )
 
 # Sort before formatting
 summary_df = summary_df.sort_values(by=["Inserted_Date", "Operator_Code"])
 
-# ✅ Add TOTAL row per date (BEFORE formatting date)
+# ✅ Add TOTAL row per date
 total_df = (
     summary_df
     .groupby("Inserted_Date", as_index=False)["Operator_Count"]
@@ -210,7 +210,7 @@ total_df = (
 total_df["Operator_Code"] = "TOTAL"
 
 # Combine both
-final_df = pd.concat([summary_df, total_df], ignore_index=False)
+final_df = pd.concat([summary_df, total_df], ignore_index=True)
 
 # ✅ Format date (ONLY for display)
 final_df["Inserted_Date"] = pd.to_datetime(final_df["Inserted_Date"]).dt.strftime("%d-%m-%Y")
@@ -219,11 +219,10 @@ final_df["Inserted_Date"] = pd.to_datetime(final_df["Inserted_Date"]).dt.strftim
 final_df = final_df.sort_values(
     by=["Inserted_Date", "Operator_Code"],
     key=lambda col: col if col.name != "Operator_Code" else col.replace("TOTAL", "ZZZ")
-)
+).reset_index(drop=True)   # ✅ Fix continuous index
 
 # Display
-st.dataframe(final_df, use_container_width=True)# ---------------------------
-# OPERATOR TREND
+st.dataframe(final_df, use_container_width=True)# OPERATOR TREND
 # ---------------------------
 st.markdown('<div class="section">Date Wise Operator Trend</div>', unsafe_allow_html=True)
 
