@@ -77,7 +77,7 @@ st.markdown('<div class="title">SSS DATA ANALYTICS DASHBOARD</div>', unsafe_allo
 # ---------------------------
 # FILE PATH (BACKEND)
 # ---------------------------
-FILE_PATH = "data/SSS-Mar_26.zip"
+FILE_PATH = "SSS-Mar_26.zip"
 
 if not os.path.exists(FILE_PATH):
     st.error("❌ File not found")
