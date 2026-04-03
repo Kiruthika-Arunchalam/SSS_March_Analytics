@@ -184,25 +184,45 @@ df['Inserted_Date'] = pd.to_datetime(df['Inserted_Date']).dt.date
 
 
 # ---------------------------
-# SUMMARY TABLE (FORMAT FIX)
+# SUMMARY TABLE WITH TOTAL
 # ---------------------------
-st.markdown('<div class="section">Operator Extraction Summary</div>', unsafe_allow_html=True)
+st.markdown('<div class="section">Date vs Operator Summary</div>', unsafe_allow_html=True)
 
+# Create summary from FILTERED DATA
 summary_df = (
     filtered_df
     .dropna(subset=["Inserted_Date", "Operator_Code"])
     .groupby(["Inserted_Date", "Operator_Code"])
     .size()
     .reset_index(name="Operator_Count")
-    .sort_values(by=["Inserted_Date", "Operator_Code"])
 )
 
-# ✅ FORMAT DATE (IMPORTANT LINE)
-summary_df["Inserted_Date"] = summary_df["Inserted_Date"].dt.strftime("%d-%m-%Y")
+# Sort before formatting
+summary_df = summary_df.sort_values(by=["Inserted_Date", "Operator_Code"])
 
-# Show in UI
-st.dataframe(summary_df, use_container_width=True)
-# ---------------------------
+# ✅ Add TOTAL row per date (BEFORE formatting date)
+total_df = (
+    summary_df
+    .groupby("Inserted_Date", as_index=False)["Operator_Count"]
+    .sum()
+)
+
+total_df["Operator_Code"] = "TOTAL"
+
+# Combine both
+final_df = pd.concat([summary_df, total_df], ignore_index=True)
+
+# ✅ Format date (ONLY for display)
+final_df["Inserted_Date"] = pd.to_datetime(final_df["Inserted_Date"]).dt.strftime("%d-%m-%Y")
+
+# ✅ Sort so TOTAL comes last
+final_df = final_df.sort_values(
+    by=["Inserted_Date", "Operator_Code"],
+    key=lambda col: col if col.name != "Operator_Code" else col.replace("TOTAL", "ZZZ")
+)
+
+# Display
+st.dataframe(final_df, use_container_width=True)# ---------------------------
 # OPERATOR TREND
 # ---------------------------
 st.markdown('<div class="section">Date Wise Operator Trend</div>', unsafe_allow_html=True)
