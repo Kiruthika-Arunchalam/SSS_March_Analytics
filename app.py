@@ -77,22 +77,115 @@ def style_chart(fig):
 # ---------------------------
 st.markdown('<div class="title">SSS DATA ANALYTICS DASHBOARD</div>', unsafe_allow_html=True)
 
+import streamlit as st
+import pandas as pd
+import zipfile
+
+st.set_page_config(layout="wide")
+
+st.title("📊 Operator Summary Dashboard")
+
 # ---------------------------
-# LOAD DATA
+# FILE UPLOAD
 # ---------------------------
-@st.cache_data
-def load_data():
-    zip_file = [f for f in os.listdir() if f.endswith(".zip")][0]
+uploaded_file = st.file_uploader("Upload CSV or ZIP file", type=["csv", "zip"])
 
-    with zipfile.ZipFile(zip_file) as z:
-        file_name = [f for f in z.namelist() if f.endswith(".csv")][0]
-        with z.open(file_name) as f:
-            df = pd.read_csv(f, encoding="cp1252")
+if uploaded_file:
 
-    return df
+    # 🔍 Show file name (debug)
+    st.write("📁 File Loaded:", uploaded_file.name)
 
-df = load_data()
+    # ---------------------------
+    # READ FILE (CSV / ZIP)
+    # ---------------------------
+    if uploaded_file.name.endswith(".zip"):
+        with zipfile.ZipFile(uploaded_file, 'r') as z:
+            file_list = z.namelist()
+            st.write("ZIP contains:", file_list)
 
+            # Read first CSV inside zip
+            csv_files = [f for f in file_list if f.endswith(".csv")]
+
+            if csv_files:
+                df = pd.read_csv(z.open(csv_files[0]))
+            else:
+                st.error("❌ No CSV file found inside ZIP")
+                st.stop()
+    else:
+        df = pd.read_csv(uploaded_file)
+
+    st.success("✅ File Loaded Successfully")
+
+    # ---------------------------
+    # BASIC CLEANING
+    # ---------------------------
+    df.columns = df.columns.str.strip()
+
+    # Convert date
+    df["Inserted_Date"] = pd.to_datetime(df["Inserted_Date"], errors="coerce")
+
+    # ---------------------------
+    # DEBUG (IMPORTANT)
+    # ---------------------------
+    st.write("🔢 Total Rows:", len(df))
+    st.write("🧾 Unique Operators:", df["Operator_Code"].nunique())
+    st.dataframe(df.tail(5))
+
+    # ---------------------------
+    # FILTER DATA (optional)
+    # ---------------------------
+    filtered_df = df.copy()
+
+    # ---------------------------
+    # SUMMARY TABLE WITH TOTAL
+    # ---------------------------
+    st.markdown("### 📅 Date vs Operator Summary")
+
+    summary_df = (
+        filtered_df
+        .dropna(subset=["Inserted_Date", "Operator_Code"])
+        .groupby(["Inserted_Date", "Operator_Code"])
+        .size()
+        .reset_index(name="Operator_Count")
+    )
+
+    # Sort
+    summary_df = summary_df.sort_values(by=["Inserted_Date", "Operator_Code"])
+
+    # ---------------------------
+    # TOTAL ROW PER DATE
+    # ---------------------------
+    total_df = (
+        summary_df
+        .groupby("Inserted_Date", as_index=False)["Operator_Count"]
+        .sum()
+    )
+
+    total_df["Operator_Code"] = "TOTAL"
+
+    # Combine
+    final_df = pd.concat([summary_df, total_df], ignore_index=True)
+
+    # ---------------------------
+    # FORMAT DATE
+    # ---------------------------
+    final_df["Inserted_Date"] = final_df["Inserted_Date"].dt.strftime("%d-%m-%Y")
+
+    # ---------------------------
+    # SORT (TOTAL LAST)
+    # ---------------------------
+    final_df = final_df.sort_values(
+        by=["Inserted_Date", "Operator_Code"],
+        key=lambda col: col if col.name != "Operator_Code" else col.replace("TOTAL", "ZZZ")
+    ).reset_index(drop=True)
+
+    # ---------------------------
+    # DISPLAY
+    # ---------------------------
+    st.dataframe(final_df, use_container_width=True)
+
+else:
+    st.info("👆 Please upload a CSV or ZIP file to proceed")
 # ---------------------------
 # CLEAN DATA
 # ---------------------------
