@@ -198,11 +198,11 @@ c3.markdown(f'<div class="card card3">TERMINALS<br><h1>{filtered_df["From_Port_T
 c4.markdown(f'<div class="card card4">VESSELS<br><h1>{filtered_df["Vessel_Name"].nunique()}</h1></div>', unsafe_allow_html=True)
 
 # ---------------------------
-# SUMMARY TABLE WITH TOTAL
+# SUMMARY TABLE WITH FINAL TOTAL
 # ---------------------------
 st.markdown('<div class="section">Date vs Operator Summary</div>', unsafe_allow_html=True)
 
-# Create summary from FILTERED DATA
+# Summary per date & operator
 summary_df = (
     filtered_df
     .dropna(subset=["Inserted_Date", "Operator_Code"])
@@ -211,33 +211,33 @@ summary_df = (
     .reset_index(name="Operator_Count")
 )
 
-# Sort before formatting
+# Sort
 summary_df = summary_df.sort_values(by=["Inserted_Date", "Operator_Code"])
 
-# ✅ Add TOTAL row per date (BEFORE formatting date)
-total_df = (
-    summary_df
-    .groupby("Inserted_Date", as_index=False)["Operator_Count"]
-    .sum()
-)
+# ---------------------------
+# GRAND TOTAL (ONLY ONE ROW)
+# ---------------------------
+grand_total = pd.DataFrame({
+    "Inserted_Date": ["TOTAL"],
+    "Operator_Code": [""],
+    "Operator_Count": [summary_df["Operator_Count"].sum()]
+})
 
-total_df["Operator_Code"] = "TOTAL"
+# ---------------------------
+# FORMAT DATE
+# ---------------------------
+summary_df["Inserted_Date"] = pd.to_datetime(summary_df["Inserted_Date"]).dt.strftime("%d-%m-%Y")
 
-# Combine both
-final_df = pd.concat([summary_df, total_df], ignore_index=True)
+# Combine
+final_df = pd.concat([summary_df, grand_total], ignore_index=True)
 
-# ✅ Format date (ONLY for display)
-final_df["Inserted_Date"] = pd.to_datetime(final_df["Inserted_Date"]).dt.strftime("%d-%m-%Y")
-
-# ✅ Sort so TOTAL comes last
-final_df = final_df.sort_values(
-    by=["Inserted_Date", "Operator_Code"],
-    key=lambda col: col if col.name != "Operator_Code" else col.replace("TOTAL", "ZZZ")
-)
+# ---------------------------
+# RESET INDEX (FIX ISSUE)
+# ---------------------------
+final_df = final_df.reset_index(drop=True)
 
 # Display
-st.dataframe(final_df, use_container_width=True)
-# ---------------------------
+st.dataframe(final_df, use_container_width=True)# ---------------------------
 # OPERATOR TREND
 # ---------------------------
 st.markdown('<div class="section">Date Wise Operator Trend</div>', unsafe_allow_html=True)
