@@ -80,7 +80,7 @@ st.markdown('<div class="title">SSS DATA ANALYTICS DASHBOARD</div>', unsafe_allo
 # ---------------------------
 # LOAD DATA
 # ---------------------------
-@st.cache_data
+
 def load_data():
     zip_file = [f for f in os.listdir() if f.endswith(".zip")][0]
 
