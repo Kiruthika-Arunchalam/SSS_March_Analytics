@@ -15,31 +15,38 @@ st.set_page_config(page_title="SSS Dashboard", layout="wide")
 st.title("📊 SSS DATA ANALYTICS DASHBOARD")
 
 # ---------------------------
-# FILE PATH (SAME FOLDER)
+# AUTO DETECT ZIP FILE
 # ---------------------------
-FILE_PATH = "SSS-Mar_26.zip"
+files = os.listdir()
 
-# ---------------------------
-# LOAD FILE (BACKEND ONLY)
-# ---------------------------
-if not os.path.exists(FILE_PATH):
-    st.error("❌ File not found. Make sure ZIP is in same folder as app.py")
+zip_files = [f for f in files if f.lower().endswith(".zip")]
+
+if not zip_files:
+    st.error("❌ No ZIP file found in app folder")
+    st.write("Available files:", files)
     st.stop()
 
+FILE_PATH = zip_files[0]
+
+st.write("📁 Using file:", FILE_PATH)
+
+# ---------------------------
+# LOAD ZIP
+# ---------------------------
 with zipfile.ZipFile(FILE_PATH, 'r') as z:
     file_list = z.namelist()
 
-    # pick correct CSV inside zip
-    csv_files = [f for f in file_list if "SSS_Mar_26" in f]
+    st.write("ZIP contains:", file_list)
+
+    csv_files = [f for f in file_list if f.endswith(".csv")]
 
     if not csv_files:
-        st.error("❌ CSV file not found inside ZIP")
+        st.error("❌ No CSV inside ZIP")
         st.stop()
 
     df = pd.read_csv(z.open(csv_files[0]))
 
-st.success("✅ Data Loaded from Backend")
-
+st.success("✅ File Loaded Successfully")
 # ---------------------------
 # CLEAN DATA
 # ---------------------------
